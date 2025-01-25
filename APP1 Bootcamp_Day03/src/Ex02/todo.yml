@@ -1,0 +1,38 @@
+hosts: localhost
+tasks:
+  - name: Install python3 using Homebrew
+    homebrew:
+      name: python
+      state: present
+
+  - name: Install pip package beautifulsoup4
+    pip:
+      name: beautifulsoup4
+      executable: /usr/local/bin/python3  # Убедитесь, что путь правильный
+
+  - name: Check Python path
+    command: python -c "import sys; print(sys.executable)"
+    register: python_path_output
+
+  - name: Debug Python path
+    debug:
+      msg: "Python path used by Ansible: {{ python_path_output.stdout }}"
+
+  - name: Copy ../Ex00/exploit.py to ./exploit.py
+    copy:
+      src: ../Ex00/exploit.py
+      dest: ./exploit.py
+
+  - name: Copy evilcorp.html to current directory
+    copy:
+      src: ../Ex00/evilcorp.html
+      dest: ./evilcorp.html
+
+  - name: Execute ./exploit.py
+    command: python ./exploit.py
+    register: exploit_output
+    ignore_errors: yes
+
+  - name: Debug exploit.py output
+    debug:
+      msg: "Output: {{ exploit_output.stdout }}\nError: {{ exploit_output.stderr }}"
