@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Screwdriver Song</title>
+    <style>
+        .success { color: green; }
+        .error { color: red; }
+    </style>
+</head>
+<body>
+    <h1>Uploaded Audio Files</h1>
+    <ul id="file-list">
+        {% for file in files %}
+            <li>{{ file }}</li>
+        {% endfor %}
+    </ul>
+
+    <h2>Upload a new file</h2>
+    <form id="upload-form" enctype="multipart/form-data">
+        <input type="file" name="file" accept=".mp3,.wav,.ogg">
+        <button type="submit">Upload</button>
+    </form>
+
+    <div id="message"></div>
+
+    <script>
+        document.getElementById('upload-form').addEventListener('submit', function (e) {
+            e.preventDefault();  // Предотвращаем отправку формы по умолчанию
+
+            const formData = new FormData();
+            const fileInput = document.querySelector('input[type="file"]');
+            formData.append('file', fileInput.files[0]);
+
+            fetch('/upload', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.text();  // Обрабатываем текстовый ответ
+            })
+            .then(message => {
+                const messageDiv = document.getElementById('message');
+                messageDiv.textContent = message;  // Выводим текстовый ответ
+                messageDiv.className = 'success';  // Устанавливаем класс для стилизации
+
+                // Обновляем список файлов
+                fetch('/files')
+                    .then(response => response.json())
+                    .then(files => {
+                        const fileList = document.getElementById('file-list');
+                        fileList.innerHTML = '';  // Очищаем список
+                        files.forEach(file => {
+                            const li = document.createElement('li');
+                            li.textContent = file;
+                            fileList.appendChild(li);
+                        });
+                    });
+            })
+            .catch(error => {
+                const messageDiv = document.getElementById('message');
+                messageDiv.textContent = error.message;  // Выводим сообщение об ошибке
+                messageDiv.className = 'error';  // Устанавливаем класс для стилизации
+            });
+        });
+    </script>
+</body>
+</html>
